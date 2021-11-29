@@ -103,6 +103,26 @@ impl<'a> IntoIterator for &'a Strings {
     }
 }
 
+/// The format of `Strings` is as follows:
+///  - len: u32,
+///  - data: &[str],
+#[cfg(feature = "serde")]
+impl serde::Serialize for Strings {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+
+        let mut struct_serializer = serializer.serialize_struct("Strings", 2)?;
+
+        let len: u32 = self.len().try_into().unwrap();
+
+        struct_serializer.serialize_field("len", &len)?;
+        struct_serializer.serialize_field("data", &self.iter())?;
+
+        struct_serializer.end()
+    }
+}
+
+#[derive(Clone)]
 pub struct StringsIter<'a> {
     strings: &'a Strings,
     ends_iter: slice::Iter<'a, u32>,
@@ -119,6 +139,22 @@ impl<'a> Iterator for StringsIter<'a> {
         self.start = end;
 
         Some(self.strings.get_str_impl(start, end))
+    }
+}
+
+/// The format of `StringsIter` is as follows:
+///  - &[str],
+#[cfg(feature = "serde")]
+impl serde::Serialize for StringsIter<'_> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+
+        let mut seq_serializer = serializer.serialize_seq(None)?;
+        for each in self.clone() {
+            seq_serializer.serialize_element(each)?;
+        }
+
+        seq_serializer.end()
     }
 }
 
