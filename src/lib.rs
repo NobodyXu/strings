@@ -124,9 +124,37 @@ impl<'a> Iterator for StringsIter<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::Strings;
+
+    fn assert_strs_in(strs: &Strings, input_strs: &Vec<String>) {
+        for (string, input_str) in strs.iter().zip(input_strs) {
+            assert_eq!(string, input_str);
+        }
+    }
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn test() {
+        let mut strs = Strings::new();
+        let input_strs: Vec<String> = (0..1024).map(|n| n.to_string()).collect();
+
+        assert!(strs.is_empty());
+
+        for (i, input_str) in input_strs.iter().enumerate() {
+            strs.push(input_str);
+            assert_eq!(strs.len(), i + 1);
+
+            assert_strs_in(&strs, &input_strs);
+        }
+
+        assert!(input_strs.iter().eq(strs.iter()));
+
+        for (i, input_str) in input_strs.iter().enumerate() {
+            assert_eq!(strs.get(i.try_into().unwrap()).unwrap(), input_str);
+        }
+
+        let input_str = input_strs.concat();
+
+        assert_eq!(strs.as_str(), input_str);
+        assert_eq!(strs.into_str(), input_str);
     }
 }
