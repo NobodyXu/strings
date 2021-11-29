@@ -104,21 +104,21 @@ impl<'a> IntoIterator for &'a Strings {
 }
 
 /// The format of `Strings` is as follows:
-///  - len: u32,
-///  - data: &[str],
+///  - u32,
+///  - &[str],
 #[cfg(feature = "serde")]
 impl serde::Serialize for Strings {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeStruct;
+        use serde::ser::SerializeTuple;
 
-        let mut struct_serializer = serializer.serialize_struct("Strings", 2)?;
+        let mut tuple_serializer = serializer.serialize_tuple(2)?;
 
         let len: u32 = self.len().try_into().unwrap();
 
-        struct_serializer.serialize_field("len", &len)?;
-        struct_serializer.serialize_field("data", &self.iter())?;
+        tuple_serializer.serialize_element(&len)?;
+        tuple_serializer.serialize_element(&self.iter())?;
 
-        struct_serializer.end()
+        tuple_serializer.end()
     }
 }
 
