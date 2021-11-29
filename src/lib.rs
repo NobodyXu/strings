@@ -7,7 +7,7 @@ use core::str;
 ///
 /// Can store at most `u32::MAX` strings, the accumulated length
 /// of these strings can be at most `u32::MAX`.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct Strings {
     strs: Vec<u8>,
     ends: Vec<u32>,
