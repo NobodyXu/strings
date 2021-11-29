@@ -3,6 +3,10 @@ use core::iter::{IntoIterator, Iterator};
 use core::slice;
 use core::str;
 
+/// Store any string efficiently in an immutable way.
+///
+/// Can store at most `u32::MAX` strings, the accumulated length
+/// of these strings can be at most `u32::MAX`.
 #[derive(Debug, Default)]
 pub struct Strings {
     strs: Vec<u8>,
