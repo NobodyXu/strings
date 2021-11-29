@@ -2,6 +2,7 @@
 mod serde;
 
 use core::convert::TryInto;
+use core::hint::unreachable_unchecked;
 use core::iter::{IntoIterator, Iterator};
 use core::slice;
 use core::str;
@@ -32,9 +33,21 @@ impl Strings {
         );
     }
 
+    /// Accumulate length of all strings.
     #[inline(always)]
-    pub fn len(&self) -> usize {
-        self.ends.len()
+    pub fn strs_len(&self) -> u32 {
+        match self.strs.len().try_into() {
+            Ok(len) => len,
+            Err(_err) => unsafe { unreachable_unchecked() },
+        }
+    }
+
+    #[inline(always)]
+    pub fn len(&self) -> u32 {
+        match self.ends.len().try_into() {
+            Ok(len) => len,
+            Err(_err) => unsafe { unreachable_unchecked() },
+        }
     }
 
     #[inline(always)]
@@ -83,13 +96,7 @@ impl Strings {
     }
 
     pub fn as_str(&self) -> &str {
-        self.get_str_impl(
-            0,
-            self.strs
-                .len()
-                .try_into()
-                .expect("Strings cannot contain more than u32::MAX strings"),
-        )
+        self.get_str_impl(0, self.strs_len())
     }
 
     pub fn into_str(self) -> String {
@@ -145,7 +152,7 @@ mod tests {
 
         for (i, input_str) in input_strs.iter().enumerate() {
             strs.push(input_str);
-            assert_eq!(strs.len(), i + 1);
+            assert_eq!(strs.len() as usize, i + 1);
 
             assert_strs_in(&strs, &input_strs);
         }

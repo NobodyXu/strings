@@ -11,7 +11,7 @@ use serde::ser::{Serialize, SerializeTuple, Serializer};
 ///  - ...
 impl Serialize for Strings {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut tuple_serializer = serializer.serialize_tuple(1 + self.len())?;
+        let mut tuple_serializer = serializer.serialize_tuple(1 + self.len() as usize)?;
 
         let len: u32 = self.len().try_into().unwrap();
 
@@ -81,7 +81,7 @@ mod tests {
     fn assert_ser_de_serde(strings: &'static Strings) {
         let mut tokens = vec![
             Token::Tuple {
-                len: 1 + strings.len(),
+                len: 1 + strings.len() as usize,
             },
             Token::U32(strings.len().try_into().unwrap()),
         ];
