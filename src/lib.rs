@@ -189,25 +189,15 @@ impl<'a> Iterator for StringsIter<'a> {
     }
 }
 
-/// The format of `StringsIter` is as follows:
-///  - &[str],
-#[cfg(feature = "serde")]
-impl serde::Serialize for StringsIter<'_> {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeSeq;
-
-        let mut seq_serializer = serializer.serialize_seq(None)?;
-        for each in self.clone() {
-            seq_serializer.serialize_element(each)?;
-        }
-
-        seq_serializer.end()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Strings;
+
+    #[cfg(feature = "serde")]
+    use serde_test::{assert_tokens, Token};
+
+    #[cfg(feature = "serde")]
+    use once_cell::sync::OnceCell;
 
     fn assert_strs_in(strs: &Strings, input_strs: &Vec<String>) {
         for (string, input_str) in strs.iter().zip(input_strs) {
@@ -239,5 +229,51 @@ mod tests {
 
         assert_eq!(strs.as_str(), input_str);
         assert_eq!(strs.into_str(), input_str);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_ser_de_empty_serde() {
+        assert_tokens(
+            &Strings::new(),
+            &[Token::Tuple { len: 1 }, Token::U32(0), Token::TupleEnd],
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    fn assert_ser_de_serde(strings: &'static Strings) {
+        let mut tokens = vec![
+            Token::Tuple {
+                len: 1 + strings.len(),
+            },
+            Token::U32(strings.len().try_into().unwrap()),
+        ];
+
+        for string in strings {
+            tokens.push(Token::BorrowedStr(string));
+        }
+
+        tokens.push(Token::TupleEnd);
+
+        assert_tokens(strings, &tokens);
+    }
+
+    #[cfg(feature = "serde")]
+    fn get_strings() -> &'static Strings {
+        static STRINGS: OnceCell<Strings> = OnceCell::new();
+
+        STRINGS.get_or_init(|| {
+            let mut strings = Strings::new();
+            for i in 0..1024 {
+                strings.push(&i.to_string());
+            }
+            strings
+        })
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_ser_de_serde() {
+        assert_ser_de_serde(get_strings());
     }
 }
