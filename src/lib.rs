@@ -23,6 +23,7 @@ impl Strings {
         Self::default()
     }
 
+    /// **Strings can contain at most `u32::MAX` strings**
     pub fn push(&mut self, s: &str) {
         self.strs.extend_from_slice(s.as_bytes());
         self.ends.push(
