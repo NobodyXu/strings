@@ -122,6 +122,50 @@ impl serde::Serialize for Strings {
     }
 }
 
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Strings {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use core::fmt;
+        use serde::de::{Error, SeqAccess, Visitor};
+
+        struct StringsVisitor;
+
+        impl<'de> Visitor<'de> for StringsVisitor {
+            type Value = Strings;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(formatter, "A u32 length and &[str]")
+            }
+
+            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let len: u32 = seq
+                    .next_element()?
+                    .ok_or_else(|| Error::invalid_length(0, &self))?;
+
+                let mut strings = Strings::new();
+                strings.reserve(len as usize);
+
+                for i in 0..len {
+                    strings.push(
+                        seq.next_element()?
+                            .ok_or_else(|| Error::invalid_length((i + 1) as usize, &self))?,
+                    );
+                }
+
+                Ok(strings)
+            }
+        }
+
+        deserializer.deserialize_struct("Strings", &["len", "data"], StringsVisitor)
+    }
+}
+
 #[derive(Clone)]
 pub struct StringsIter<'a> {
     strings: &'a Strings,
