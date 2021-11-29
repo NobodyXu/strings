@@ -231,6 +231,10 @@ mod tests {
         assert_eq!(strs.into_str(), input_str);
     }
 
+    // Test serde
+    //
+    // Test using serde_test
+
     #[cfg(feature = "serde")]
     #[test]
     fn test_ser_de_empty_serde() {
@@ -275,5 +279,21 @@ mod tests {
     #[test]
     fn test_ser_de_serde() {
         assert_ser_de_serde(get_strings());
+    }
+
+    // Test using serde_json
+
+    #[cfg(feature = "serde")]
+    fn assert_ser_de_json(strings: &Strings) {
+        assert_eq!(
+            serde_json::from_str::<'_, Strings>(&serde_json::to_string(strings).unwrap()).unwrap(),
+            *strings
+        );
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_ser_de_serde_json() {
+        assert_ser_de_json(get_strings());
     }
 }
