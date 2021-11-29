@@ -1,4 +1,4 @@
-# strings
+# vec-strings
 
 [![Rust](https://github.com/NobodyXu/vec-strings/actions/workflows/rust.yml/badge.svg)](https://github.com/NobodyXu/vec-strings/actions/workflows/rust.yml)
 
