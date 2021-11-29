@@ -13,3 +13,4 @@ keywords = ["string", "utilities"]
 categories = ["data-structures"]
 
 [dependencies]
+serde = { version = "1.0", optional = true }
