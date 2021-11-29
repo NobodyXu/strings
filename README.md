@@ -10,3 +10,5 @@
 
 Store any string efficiently in an immutable way.
 It also supports push operation.
+
+This crate contains feature `serde`, which enables serialization/deserialization support.
