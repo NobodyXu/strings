@@ -117,7 +117,7 @@ impl<'a> IntoIterator for &'a Strings {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StringsIter<'a> {
     strings: &'a Strings,
     ends_iter: slice::Iter<'a, u32>,
