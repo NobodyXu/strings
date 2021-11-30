@@ -1,4 +1,4 @@
-use super::Strings;
+use super::{Strings, StringsIter};
 
 use core::fmt;
 
@@ -17,6 +17,21 @@ impl Serialize for Strings {
 
         tuple_serializer.serialize_element(&len)?;
         for strings in self {
+            tuple_serializer.serialize_element(strings)?;
+        }
+
+        tuple_serializer.end()
+    }
+}
+
+/// The format of `StringsIter` is as follows:
+///  - &str,
+///  - ...
+impl Serialize for StringsIter<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut tuple_serializer = serializer.serialize_tuple(self.strings.len() as usize)?;
+
+        for strings in self.clone() {
             tuple_serializer.serialize_element(strings)?;
         }
 
@@ -66,7 +81,7 @@ mod tests {
     use super::Strings;
 
     use once_cell::sync::OnceCell;
-    use serde_test::{assert_tokens, Token};
+    use serde_test::{assert_ser_tokens, assert_tokens, Token};
 
     // Test using serde_test
 
@@ -79,6 +94,7 @@ mod tests {
     }
 
     fn assert_ser_de_serde(strings: &'static Strings) {
+        // Test Strings
         let mut tokens = vec![
             Token::Tuple {
                 len: 1 + strings.len() as usize,
@@ -93,6 +109,14 @@ mod tests {
         tokens.push(Token::TupleEnd);
 
         assert_tokens(strings, &tokens);
+
+        // Test StringsIter
+        tokens[0] = Token::Tuple {
+            len: strings.len() as usize,
+        };
+        tokens.remove(1);
+
+        assert_ser_tokens(&strings.iter(), &tokens);
     }
 
     fn get_strings() -> &'static Strings {
