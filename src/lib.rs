@@ -10,14 +10,16 @@ use core::iter::{IntoIterator, Iterator};
 use core::slice;
 use core::str;
 
+use thin_vec::ThinVec;
+
 /// Store any string efficiently in an immutable way.
 ///
 /// Can store at most `u32::MAX` strings, the accumulated length
 /// of these strings can be at most `u32::MAX`.
 #[derive(Debug, Default, Eq, PartialEq, Clone, Hash)]
 pub struct Strings {
-    strs: Vec<u8>,
-    ends: Vec<u32>,
+    strs: ThinVec<u8>,
+    ends: ThinVec<u32>,
 }
 
 impl Strings {
@@ -104,7 +106,9 @@ impl Strings {
     }
 
     pub fn into_str(self) -> String {
-        unsafe { String::from_utf8_unchecked(self.strs) }
+        let mut vec = Vec::with_capacity(self.strs.len());
+        vec.extend_from_slice(&self.strs);
+        unsafe { String::from_utf8_unchecked(vec) }
     }
 }
 impl<'a> IntoIterator for &'a Strings {
