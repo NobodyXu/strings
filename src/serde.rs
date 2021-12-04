@@ -1,65 +1,73 @@
-use super::{Strings, StringsIter, StringsNoIndexIter};
+use super::{Strings, StringsIter, StringsNoIndex, StringsNoIndexIter};
 
 use core::fmt;
 
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
 use serde::ser::{Serialize, SerializeTuple, Serializer};
 
-/// The format of `Strings` is as follows:
-///  - u32,
-///  - &str,
-///  - ...
-impl Serialize for Strings {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut tuple_serializer = serializer.serialize_tuple(1 + self.len() as usize)?;
+macro_rules! impl_ser_de_for_strings {
+    ($Strings:ident) => {
+        /// The format is as follows:
+        ///  - u32,
+        ///  - &str,
+        ///  - ...
+        impl Serialize for $Strings {
+            fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                let mut tuple_serializer = serializer.serialize_tuple(1 + self.len() as usize)?;
 
-        let len: u32 = self.len().try_into().unwrap();
+                let len: u32 = self.len().try_into().unwrap();
 
-        tuple_serializer.serialize_element(&len)?;
-        for strings in self {
-            tuple_serializer.serialize_element(strings)?;
-        }
-
-        tuple_serializer.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for Strings {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct StringsVisitor;
-
-        impl<'de> Visitor<'de> for StringsVisitor {
-            type Value = Strings;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "A u32 length and &[str]")
-            }
-
-            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-            where
-                V: SeqAccess<'de>,
-            {
-                let len: u32 = seq
-                    .next_element()?
-                    .ok_or_else(|| Error::invalid_length(0, &self))?;
-
-                let mut strings = Strings::new();
-                strings.reserve(len as usize);
-
-                for i in 0..len {
-                    strings.push(
-                        seq.next_element()?
-                            .ok_or_else(|| Error::invalid_length((i + 1) as usize, &self))?,
-                    );
+                tuple_serializer.serialize_element(&len)?;
+                for strings in self {
+                    tuple_serializer.serialize_element(strings)?;
                 }
 
-                Ok(strings)
+                tuple_serializer.end()
             }
         }
 
-        deserializer.deserialize_tuple(2, StringsVisitor)
-    }
+        impl<'de> Deserialize<'de> for $Strings {
+            fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                struct StringsVisitor;
+
+                impl<'de> Visitor<'de> for StringsVisitor {
+                    type Value = $Strings;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        write!(formatter, "A u32 length and &[str]")
+                    }
+
+                    fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
+                    where
+                        V: SeqAccess<'de>,
+                    {
+                        let len: u32 = seq
+                            .next_element()?
+                            .ok_or_else(|| Error::invalid_length(0, &self))?;
+
+                        let mut strings = $Strings::new();
+                        //strings.reserve(len as usize);
+
+                        for i in 0..len {
+                            strings.push(
+                                seq.next_element()?.ok_or_else(|| {
+                                    Error::invalid_length((i + 1) as usize, &self)
+                                })?,
+                            );
+                        }
+
+                        Ok(strings)
+                    }
+                }
+
+                deserializer.deserialize_tuple(2, StringsVisitor)
+            }
+        }
+    };
 }
+
+impl_ser_de_for_strings!(Strings);
+impl_ser_de_for_strings!(StringsNoIndex);
 
 macro_rules! impl_Serialize_for_iter {
     ($Iter:ident) => {
