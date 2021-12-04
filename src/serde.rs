@@ -45,8 +45,7 @@ macro_rules! impl_ser_de_for_strings {
                             .next_element()?
                             .ok_or_else(|| Error::invalid_length(0, &self))?;
 
-                        let mut strings = $Strings::new();
-                        //strings.reserve(len as usize);
+                        let mut strings = $Strings::with_capacity(len);
 
                         for i in 0..len {
                             strings.push(
