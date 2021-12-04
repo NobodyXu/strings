@@ -143,4 +143,28 @@ mod tests {
 
         assert!(input_strs.iter().eq(strs.iter()));
     }
+
+    #[test]
+    fn test_adding_empty_strs() {
+        let mut strs = StringsNoIndex::new();
+
+        assert!(strs.is_empty());
+
+        for i in 0..10 {
+            strs.push("");
+            assert_eq!(strs.len() as usize, i + 1);
+        }
+
+        assert!(!strs.is_empty());
+
+        strs.push("12345");
+
+        for (i, string) in strs.iter().enumerate() {
+            if i < 10 {
+                assert_eq!(string, "");
+            } else {
+                assert_eq!(string, "12345");
+            }
+        }
+    }
 }
