@@ -181,15 +181,24 @@ mod tests {
 
     // Test using serde_json
 
-    fn assert_ser_de_json(strings: &Strings) {
-        assert_eq!(
-            serde_json::from_str::<'_, Strings>(&serde_json::to_string(strings).unwrap()).unwrap(),
-            *strings
-        );
+    macro_rules! assert_ser_de_json {
+        ($strings:expr, $strings_type:ident) => {
+            let strings = $strings;
+            assert_eq!(
+                serde_json::from_str::<'_, $strings_type>(&serde_json::to_string(strings).unwrap())
+                    .unwrap(),
+                *strings
+            );
+        };
     }
 
     #[test]
-    fn test_ser_de_serde_json() {
-        assert_ser_de_json(get_strings());
+    fn test_ser_de_serde_json_strings() {
+        assert_ser_de_json!(get_strings(), Strings);
+    }
+
+    #[test]
+    fn test_ser_de_serde_json_strings_no_index() {
+        assert_ser_de_json!(get_strings_no_index(), StringsNoIndex);
     }
 }
