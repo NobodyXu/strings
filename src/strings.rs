@@ -25,7 +25,7 @@ impl Strings {
     /// * `len` - number of strings
     pub fn with_capacity(len: u32) -> Self {
         let mut strings = Self::default();
-        strings.reserve(len as usize);
+        strings.reserve(len);
         strings
     }
 
@@ -63,8 +63,8 @@ impl Strings {
     }
 
     #[inline(always)]
-    pub fn reserve(&mut self, strs_cnt: usize) {
-        self.ends.reserve(strs_cnt);
+    pub fn reserve(&mut self, strs_cnt: u32) {
+        self.ends.reserve(strs_cnt as usize);
     }
 
     #[inline(always)]
