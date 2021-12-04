@@ -29,6 +29,14 @@ impl StringsNoIndex {
         Self { strs }
     }
 
+    /// * `len` - number of strings
+    ///
+    /// NOTE that this function does nothing and is defined just to be compatible
+    /// with `Strings`.
+    pub fn with_capacity(_len: u32) -> Self {
+        Self::new()
+    }
+
     fn set_len(&mut self, new_len: u32) {
         self.strs[..4].copy_from_slice(&new_len.to_ne_bytes());
     }
