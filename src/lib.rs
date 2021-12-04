@@ -4,5 +4,6 @@
 #[cfg(feature = "serde")]
 mod serde;
 mod strings;
+mod strings_no_index;
 
 pub use strings::*;
