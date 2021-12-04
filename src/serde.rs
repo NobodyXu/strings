@@ -55,6 +55,8 @@ macro_rules! impl_ser_de_for_strings {
                             );
                         }
 
+                        strings.shrink_to_fit();
+
                         Ok(strings)
                     }
                 }
