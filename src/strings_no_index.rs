@@ -1,37 +1,57 @@
 use core::iter::{IntoIterator, Iterator};
+use core::mem;
 use core::str;
 
 use thin_vec::ThinVec;
 
 /// Store any string efficiently in an immutable way.
 ///
-/// Doesn't have any limit on length, however `StringsNoIndex` only provides
+/// Can store at most `u32::MAX` strings and only provides
 /// `StringsNoIndexIter` and does not provide arbitary indexing.
-#[derive(Debug, Default, Eq, PartialEq, Clone, Hash)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub struct StringsNoIndex {
     strs: ThinVec<u8>,
 }
 
-impl StringsNoIndex {
+impl Default for StringsNoIndex {
     #[inline(always)]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl StringsNoIndex {
     pub fn new() -> Self {
-        Self::default()
+        let mut strs = ThinVec::with_capacity(mem::size_of::<u32>());
+        let len: u32 = 0;
+        strs.extend_from_slice(&len.to_ne_bytes());
+
+        Self { strs }
+    }
+
+    fn set_len(&mut self, new_len: u32) {
+        self.strs[..4].copy_from_slice(&new_len.to_ne_bytes());
+    }
+
+    pub fn len(&self) -> u32 {
+        u32::from_ne_bytes(self.strs[..4].try_into().unwrap())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn push(&mut self, s: &str) {
         self.strs.extend_from_slice(s.as_bytes());
         self.strs.push(0);
+
+        self.set_len(self.len() + 1);
     }
 
     /// Accumulate length of all strings.
     #[inline(always)]
     pub fn strs_len(&self) -> usize {
         self.strs.len()
-    }
-
-    #[inline(always)]
-    pub fn is_empty(&self) -> bool {
-        self.strs_len() == 0
     }
 
     #[inline(always)]
@@ -45,7 +65,7 @@ impl StringsNoIndex {
 
     #[inline(always)]
     pub fn iter(&self) -> StringsNoIndexIter<'_> {
-        StringsNoIndexIter::new(&self.strs)
+        StringsNoIndexIter::new(&self.strs[4..], self.len())
     }
 }
 impl<'a> IntoIterator for &'a StringsNoIndex {
@@ -59,11 +79,11 @@ impl<'a> IntoIterator for &'a StringsNoIndex {
 }
 
 #[derive(Clone, Debug)]
-pub struct StringsNoIndexIter<'a>(&'a [u8]);
+pub struct StringsNoIndexIter<'a>(&'a [u8], u32);
 
 impl<'a> StringsNoIndexIter<'a> {
-    fn new(slices: &'a [u8]) -> Self {
-        Self(slices)
+    fn new(strs: &'a [u8], len: u32) -> Self {
+        Self(strs, len)
     }
 }
 
@@ -99,12 +119,9 @@ mod tests {
 
         assert!(strs.is_empty());
 
-        for input_str in input_strs.iter() {
-            eprintln!("pushing {}", input_str);
-
+        for (i, input_str) in input_strs.iter().enumerate() {
             strs.push(input_str);
-
-            eprintln!("{:#?}", strs);
+            assert_eq!(strs.len() as usize, i + 1);
 
             assert_strs_in(&strs, &input_strs);
         }
