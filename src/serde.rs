@@ -76,8 +76,7 @@ impl Serialize for StringsIter<'_> {
     }
 }
 
-/// The format of `StringsNoIndexIter` is as follows
-/// **(NOTE that it only gives a dummy len)**:
+/// The format of `StringsNoIndexIter` is as follows:
 ///  - &str,
 ///  - ...
 impl Serialize for StringsNoIndexIter<'_> {
