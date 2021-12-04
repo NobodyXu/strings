@@ -14,7 +14,7 @@ categories = ["data-structures"]
 
 [dependencies]
 serde = { version = "1.0", optional = true }
-thin-vec = "0.2.3"
+thin-vec = "0.2.4"
 
 [dev-dependencies]
 serde_json = "1.0"
