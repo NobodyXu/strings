@@ -18,8 +18,8 @@ macro_rules! impl_ser_de_for_strings {
                 let len: u32 = self.len().try_into().unwrap();
 
                 tuple_serializer.serialize_element(&len)?;
-                for strings in self {
-                    tuple_serializer.serialize_element(strings)?;
+                for string in self {
+                    tuple_serializer.serialize_element(string)?;
                 }
 
                 tuple_serializer.end()
