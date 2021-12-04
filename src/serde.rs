@@ -61,35 +61,27 @@ impl<'de> Deserialize<'de> for Strings {
     }
 }
 
-/// The format of `StringsIter` is as follows:
-///  - &str,
-///  - ...
-impl Serialize for StringsIter<'_> {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut tuple_serializer = serializer.serialize_tuple(self.size_hint().0)?;
+macro_rules! impl_Serialize_for_iter {
+    ($Iter:ident) => {
+        /// The format is as follows:
+        ///  - &str,
+        ///  - ...
+        impl Serialize for $Iter<'_> {
+            fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                let mut tuple_serializer = serializer.serialize_tuple(self.size_hint().0)?;
 
-        for string in self.clone() {
-            tuple_serializer.serialize_element(string)?;
+                for string in self.clone() {
+                    tuple_serializer.serialize_element(string)?;
+                }
+
+                tuple_serializer.end()
+            }
         }
-
-        tuple_serializer.end()
-    }
+    };
 }
 
-/// The format of `StringsNoIndexIter` is as follows:
-///  - &str,
-///  - ...
-impl Serialize for StringsNoIndexIter<'_> {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut tuple_serializer = serializer.serialize_tuple(self.size_hint().0)?;
-
-        for string in self.clone() {
-            tuple_serializer.serialize_element(string)?;
-        }
-
-        tuple_serializer.end()
-    }
-}
+impl_Serialize_for_iter!(StringsIter);
+impl_Serialize_for_iter!(StringsNoIndexIter);
 
 #[cfg(test)]
 mod tests {
