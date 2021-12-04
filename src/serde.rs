@@ -68,8 +68,8 @@ impl Serialize for StringsIter<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut tuple_serializer = serializer.serialize_tuple(self.size_hint().0)?;
 
-        for strings in self.clone() {
-            tuple_serializer.serialize_element(strings)?;
+        for string in self.clone() {
+            tuple_serializer.serialize_element(string)?;
         }
 
         tuple_serializer.end()
