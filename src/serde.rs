@@ -1,4 +1,4 @@
-use super::{Strings, StringsIter};
+use super::{Strings, StringsIter, StringsNoIndexIter};
 
 use core::fmt;
 
@@ -17,21 +17,6 @@ impl Serialize for Strings {
 
         tuple_serializer.serialize_element(&len)?;
         for strings in self {
-            tuple_serializer.serialize_element(strings)?;
-        }
-
-        tuple_serializer.end()
-    }
-}
-
-/// The format of `StringsIter` is as follows:
-///  - &str,
-///  - ...
-impl Serialize for StringsIter<'_> {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut tuple_serializer = serializer.serialize_tuple(self.strings.len() as usize)?;
-
-        for strings in self.clone() {
             tuple_serializer.serialize_element(strings)?;
         }
 
@@ -73,6 +58,37 @@ impl<'de> Deserialize<'de> for Strings {
         }
 
         deserializer.deserialize_tuple(2, StringsVisitor)
+    }
+}
+
+/// The format of `StringsIter` is as follows:
+///  - &str,
+///  - ...
+impl Serialize for StringsIter<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut tuple_serializer = serializer.serialize_tuple(self.strings.len() as usize)?;
+
+        for strings in self.clone() {
+            tuple_serializer.serialize_element(strings)?;
+        }
+
+        tuple_serializer.end()
+    }
+}
+
+/// The format of `StringsNoIndexIter` is as follows
+/// **(NOTE that it only gives a dummy len)**:
+///  - &str,
+///  - ...
+impl Serialize for StringsNoIndexIter<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut tuple_serializer = serializer.serialize_tuple(1)?;
+
+        for string in self.clone() {
+            tuple_serializer.serialize_element(string)?;
+        }
+
+        tuple_serializer.end()
     }
 }
 
