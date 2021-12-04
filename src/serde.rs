@@ -184,9 +184,9 @@ mod tests {
     macro_rules! assert_ser_de_json {
         ($strings:expr, $strings_type:ident) => {
             let strings = $strings;
+            let json = serde_json::to_string(strings).unwrap();
             assert_eq!(
-                serde_json::from_str::<'_, $strings_type>(&serde_json::to_string(strings).unwrap())
-                    .unwrap(),
+                serde_json::from_str::<'_, $strings_type>(&json).unwrap(),
                 *strings
             );
         };
