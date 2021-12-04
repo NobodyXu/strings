@@ -92,7 +92,7 @@ impl_Serialize_for_iter!(StringsNoIndexIter);
 
 #[cfg(test)]
 mod tests {
-    use super::Strings;
+    use super::{Strings, StringsNoIndex};
 
     use once_cell::sync::OnceCell;
     use serde_test::{assert_ser_tokens, assert_tokens, Token};
@@ -100,9 +100,17 @@ mod tests {
     // Test using serde_test
 
     #[test]
-    fn test_ser_de_empty_serde() {
+    fn test_ser_de_empty_serde_strings() {
         assert_tokens(
             &Strings::new(),
+            &[Token::Tuple { len: 1 }, Token::U32(0), Token::TupleEnd],
+        );
+    }
+
+    #[test]
+    fn test_ser_de_empty_serde_strings_no_index() {
+        assert_tokens(
+            &StringsNoIndex::new(),
             &[Token::Tuple { len: 1 }, Token::U32(0), Token::TupleEnd],
         );
     }
