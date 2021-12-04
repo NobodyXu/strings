@@ -22,6 +22,13 @@ impl Strings {
         Self::default()
     }
 
+    /// * `len` - number of strings
+    pub fn with_capacity(len: u32) -> Self {
+        let mut strings = Self::default();
+        strings.reserve(len as usize);
+        strings
+    }
+
     /// **Strings can contain at most `u32::MAX` strings**
     pub fn push(&mut self, s: &str) {
         self.strs.extend_from_slice(s.as_bytes());
