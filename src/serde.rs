@@ -115,30 +115,34 @@ mod tests {
         );
     }
 
-    fn assert_ser_de_serde(strings: &'static Strings) {
-        // Test Strings
-        let mut tokens = vec![
-            Token::Tuple {
-                len: 1 + strings.len() as usize,
-            },
-            Token::U32(strings.len().try_into().unwrap()),
-        ];
+    macro_rules! assert_ser_de_serde {
+        ($strings:expr) => {
+            let strings = $strings;
 
-        for string in strings {
-            tokens.push(Token::BorrowedStr(string));
-        }
+            // Test Strings
+            let mut tokens = vec![
+                Token::Tuple {
+                    len: 1 + strings.len() as usize,
+                },
+                Token::U32(strings.len().try_into().unwrap()),
+            ];
 
-        tokens.push(Token::TupleEnd);
+            for string in strings {
+                tokens.push(Token::BorrowedStr(string));
+            }
 
-        assert_tokens(strings, &tokens);
+            tokens.push(Token::TupleEnd);
 
-        // Test StringsIter
-        tokens[0] = Token::Tuple {
-            len: strings.len() as usize,
+            assert_tokens(strings, &tokens);
+
+            // Test StringsIter
+            tokens[0] = Token::Tuple {
+                len: strings.len() as usize,
+            };
+            tokens.remove(1);
+
+            assert_ser_tokens(&strings.iter(), &tokens);
         };
-        tokens.remove(1);
-
-        assert_ser_tokens(&strings.iter(), &tokens);
     }
 
     fn get_strings() -> &'static Strings {
@@ -154,8 +158,25 @@ mod tests {
     }
 
     #[test]
-    fn test_ser_de_serde() {
-        assert_ser_de_serde(get_strings());
+    fn test_ser_de_serde_strings() {
+        assert_ser_de_serde!(get_strings());
+    }
+
+    fn get_strings_no_index() -> &'static StringsNoIndex {
+        static STRINGS: OnceCell<StringsNoIndex> = OnceCell::new();
+
+        STRINGS.get_or_init(|| {
+            let mut strings = StringsNoIndex::new();
+            for i in 0..1024 {
+                strings.push(&i.to_string());
+            }
+            strings
+        })
+    }
+
+    #[test]
+    fn test_ser_de_serde_strings_no_index() {
+        assert_ser_de_serde!(get_strings_no_index());
     }
 
     // Test using serde_json
