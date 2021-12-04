@@ -7,3 +7,4 @@ mod strings;
 mod strings_no_index;
 
 pub use strings::*;
+pub use strings_no_index::*;
