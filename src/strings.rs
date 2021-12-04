@@ -117,7 +117,7 @@ impl<'a> IntoIterator for &'a Strings {
 
 #[derive(Clone, Debug)]
 pub struct StringsIter<'a> {
-    pub(crate) strings: &'a Strings,
+    strings: &'a Strings,
     ends_iter: slice::Iter<'a, u32>,
     start: u32,
 }
@@ -132,6 +132,11 @@ impl<'a> Iterator for StringsIter<'a> {
         self.start = end;
 
         Some(self.strings.get_str_impl(start, end))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.strings.len() as usize;
+        (len, Some(len))
     }
 }
 
