@@ -100,6 +100,11 @@ impl<'a> Iterator for StringsNoIndexIter<'a> {
         self.0 = &self.0[(pos + 1)..];
         Some(unsafe { str::from_utf8_unchecked(slice) })
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.1 as usize;
+        (len, Some(len))
+    }
 }
 
 #[cfg(test)]
