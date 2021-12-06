@@ -49,6 +49,7 @@ impl StringsNoIndex {
         self.len() == 0
     }
 
+    /// * `s` - must not contain null byte.
     pub fn push(&mut self, s: &str) {
         self.strs.extend_from_slice(s.as_bytes());
         self.strs.push(0);
