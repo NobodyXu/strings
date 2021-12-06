@@ -109,7 +109,7 @@ impl<'de> Deserialize<'de> for TwoStrs {
 
 #[cfg(test)]
 mod tests {
-    use super::{Strings, StringsNoIndex};
+    use super::{Strings, StringsNoIndex, TwoStrs};
 
     use once_cell::sync::OnceCell;
     use serde_test::{assert_ser_tokens, assert_tokens, Token};
@@ -217,5 +217,23 @@ mod tests {
     #[test]
     fn test_ser_de_serde_json_strings_no_index() {
         assert_ser_de_json!(get_strings_no_index(), StringsNoIndex);
+    }
+
+    #[test]
+    fn test_ser_de_two_strs() {
+        let s1 = "1234<<";
+        let s2 = "234a";
+
+        let two_strs = TwoStrs::new(s1, s2);
+
+        assert_tokens(
+            &two_strs,
+            &[
+                Token::Tuple { len: 2 },
+                Token::BorrowedStr(s1),
+                Token::BorrowedStr(s2),
+                Token::TupleEnd,
+            ],
+        );
     }
 }
