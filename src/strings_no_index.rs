@@ -1,5 +1,4 @@
 use core::iter::{IntoIterator, Iterator};
-use core::mem;
 use core::str;
 
 use thin_vec::ThinVec;
@@ -8,25 +7,14 @@ use thin_vec::ThinVec;
 ///
 /// Can store at most `u32::MAX` strings and only provides
 /// `StringsNoIndexIter` and does not provide arbitary indexing.
-#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+#[derive(Debug, Default, Eq, PartialEq, Clone, Hash)]
 pub struct StringsNoIndex {
     strs: ThinVec<u8>,
 }
 
-impl Default for StringsNoIndex {
-    #[inline(always)]
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl StringsNoIndex {
     pub fn new() -> Self {
-        let mut strs = ThinVec::with_capacity(mem::size_of::<u32>());
-        let len: u32 = 0;
-        strs.extend_from_slice(&len.to_ne_bytes());
-
-        Self { strs }
+        Self::default()
     }
 
     /// * `len` - number of strings
@@ -42,19 +30,28 @@ impl StringsNoIndex {
     }
 
     pub fn len(&self) -> u32 {
-        u32::from_ne_bytes(self.strs[..4].try_into().unwrap())
+        if self.is_empty() {
+            0
+        } else {
+            u32::from_ne_bytes(self.strs[..4].try_into().unwrap())
+        }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.strs.is_empty()
     }
 
     /// * `s` - must not contain null byte.
     pub fn push(&mut self, s: &str) {
+        if self.is_empty() {
+            let len: u32 = 1;
+            self.strs.extend_from_slice(&len.to_ne_bytes());
+        } else {
+            self.set_len(self.len() + 1);
+        }
+
         self.strs.extend_from_slice(s.as_bytes());
         self.strs.push(0);
-
-        self.set_len(self.len() + 1);
     }
 
     /// Accumulate length of all strings.
@@ -74,7 +71,12 @@ impl StringsNoIndex {
 
     #[inline(always)]
     pub fn iter(&self) -> StringsNoIndexIter<'_> {
-        StringsNoIndexIter::new(&self.strs[4..], self.len())
+        let slice = if self.is_empty() {
+            &[]
+        } else {
+            &self.strs[4..]
+        };
+        StringsNoIndexIter::new(slice, self.len())
     }
 }
 impl<'a> IntoIterator for &'a StringsNoIndex {
