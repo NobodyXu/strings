@@ -236,4 +236,14 @@ mod tests {
             ],
         );
     }
+
+    #[test]
+    fn test_ser_de_serde_json_two_strs() {
+        let s1 = "1234<<";
+        let s2 = "234a";
+
+        let two_strs = TwoStrs::new(s1, s2);
+
+        assert_ser_de_json!(&two_strs, TwoStrs);
+    }
 }
