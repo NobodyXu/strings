@@ -1,4 +1,4 @@
-use super::{Strings, StringsIter, StringsNoIndex, StringsNoIndexIter};
+use super::{Strings, StringsIter, StringsNoIndex, StringsNoIndexIter, TwoStrs};
 
 use core::fmt;
 
@@ -91,6 +91,21 @@ macro_rules! impl_Serialize_for_iter {
 
 impl_Serialize_for_iter!(StringsIter);
 impl_Serialize_for_iter!(StringsNoIndexIter);
+
+/// Format: (&str, &str)
+impl Serialize for TwoStrs {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.get().serialize(serializer)
+    }
+}
+
+/// Format: (&str, &str)
+impl<'de> Deserialize<'de> for TwoStrs {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let (s1, s2) = <(&'de str, &'de str)>::deserialize(deserializer)?;
+        Ok(Self::new(s1, s2))
+    }
+}
 
 #[cfg(test)]
 mod tests {
