@@ -8,7 +8,6 @@
 
 [![docs](https://docs.rs/vec-strings/badge.svg)](https://docs.rs/vec-strings)
 
-Store any string efficiently in an immutable way.
-It also supports push operation.
+More compact `Vec<Box<str>>` and `(Box<str>, Box<str>)`
 
 This crate contains feature `serde`, which enables serialization/deserialization support.
