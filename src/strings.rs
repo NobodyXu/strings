@@ -142,7 +142,7 @@ impl<'a> Iterator for StringsIter<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let len = self.strings.len() as usize;
+        let len = self.ends_iter.len();
         (len, Some(len))
     }
 }
