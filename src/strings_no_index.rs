@@ -1,4 +1,4 @@
-use core::iter::{IntoIterator, Iterator};
+use core::iter::{ExactSizeIterator, IntoIterator, Iterator};
 use core::str;
 
 use thin_vec::ThinVec;
@@ -119,6 +119,8 @@ impl<'a> Iterator for StringsNoIndexIter<'a> {
         (len, Some(len))
     }
 }
+
+impl ExactSizeIterator for StringsNoIndexIter<'_> {}
 
 #[cfg(test)]
 mod tests {
