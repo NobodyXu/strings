@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 use core::hint::unreachable_unchecked;
-use core::iter::{IntoIterator, Iterator};
+use core::iter::{ExactSizeIterator, IntoIterator, Iterator};
 use core::slice;
 use core::str;
 
@@ -146,6 +146,8 @@ impl<'a> Iterator for StringsIter<'a> {
         (len, Some(len))
     }
 }
+
+impl ExactSizeIterator for StringsIter<'_> {}
 
 #[cfg(test)]
 mod tests {
