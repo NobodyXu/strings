@@ -106,6 +106,8 @@ impl<'a> Iterator for StringsNoIndexIter<'a> {
             return None;
         }
 
+        self.1 -= 1;
+
         let pos = self.0.iter().position(|byte| *byte == 0).unwrap();
         let slice = &self.0[..pos];
         self.0 = &self.0[(pos + 1)..];
