@@ -231,4 +231,25 @@ mod tests {
             assert_eq!(&*boxed, slice);
         }
     }
+
+    #[test]
+    fn test_from_box() {
+        let vec: Vec<u8> = (0..100).collect();
+
+        for len in 0..vec.len() {
+            let slice = &vec[..len];
+
+            let vec: Vec<u8> = slice.iter().copied().collect();
+
+            let mut array = SmallArrayBox::from_box(vec.into_boxed_slice());
+
+            assert_eq!(array.deref(), slice);
+            assert_eq!(array.deref_mut(), slice);
+            assert_ptr_eq(array.deref(), array.deref_mut());
+
+            let boxed = array.into_boxed_slice();
+
+            assert_eq!(&*boxed, slice);
+        }
+    }
 }
