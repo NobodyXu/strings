@@ -15,6 +15,7 @@ categories = ["data-structures"]
 [dependencies]
 serde = { version = "1.0", optional = true }
 thin-vec = "0.2.4"
+array-init = "2.0.0"
 
 [dev-dependencies]
 serde_json = "1.0"
