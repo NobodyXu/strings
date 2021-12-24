@@ -47,7 +47,16 @@ impl StringsNoIndex {
             let len: u32 = 1;
             self.strs.extend_from_slice(&len.to_ne_bytes());
         } else {
-            self.set_len(self.len() + 1);
+            let len = self.len();
+
+            if len == u32::MAX {
+                panic!(
+                    "StringsNoIndex cannot contain more than u32::MAX {} elements",
+                    u32::MAX
+                );
+            }
+
+            self.set_len(len + 1);
         }
 
         self.strs.extend_from_slice(s.as_bytes());
