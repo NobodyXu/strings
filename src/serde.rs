@@ -7,22 +7,9 @@ use serde::ser::{Serialize, SerializeTuple, Serializer};
 
 macro_rules! impl_ser_de_for_strings {
     ($Strings:ident) => {
-        /// The format is as follows:
-        ///  - u32,
-        ///  - &str,
-        ///  - ...
         impl Serialize for $Strings {
             fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-                let mut tuple_serializer = serializer.serialize_tuple(1 + self.len() as usize)?;
-
-                let len: u32 = self.len().try_into().unwrap();
-
-                tuple_serializer.serialize_element(&len)?;
-                for string in self {
-                    tuple_serializer.serialize_element(string)?;
-                }
-
-                tuple_serializer.end()
+                serializer.collect_seq(self)
             }
         }
 
@@ -41,27 +28,22 @@ macro_rules! impl_ser_de_for_strings {
                     where
                         V: SeqAccess<'de>,
                     {
-                        let len: u32 = seq
-                            .next_element()?
-                            .ok_or_else(|| Error::invalid_length(0, &self))?;
+                        let len = seq.size_hint().unwrap_or(0);
 
-                        let mut strings = $Strings::with_capacity(len);
+                        let mut values =
+                            $Strings::with_capacity(len.try_into().map_err(|_| {
+                                V::Error::invalid_length(len, &"Expect u32 length")
+                            })?);
 
-                        for i in 0..len {
-                            strings.push(
-                                seq.next_element()?.ok_or_else(|| {
-                                    Error::invalid_length((i + 1) as usize, &self)
-                                })?,
-                            );
+                        while let Some(value) = seq.next_element()? {
+                            values.push(value);
                         }
 
-                        strings.shrink_to_fit();
-
-                        Ok(strings)
+                        Ok(values)
                     }
                 }
 
-                deserializer.deserialize_tuple(2, StringsVisitor)
+                deserializer.deserialize_seq(StringsVisitor)
             }
         }
     };
@@ -72,9 +54,7 @@ impl_ser_de_for_strings!(StringsNoIndex);
 
 macro_rules! impl_Serialize_for_iter {
     ($Iter:ident) => {
-        /// The format is as follows:
-        ///  - &str,
-        ///  - ...
+        /// The iterator is formatted as (&str, ...)
         impl Serialize for $Iter<'_> {
             fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
                 let mut tuple_serializer = serializer.serialize_tuple(self.size_hint().0)?;
@@ -120,7 +100,7 @@ mod tests {
     fn test_ser_de_empty_serde_strings() {
         assert_tokens(
             &Strings::new(),
-            &[Token::Tuple { len: 1 }, Token::U32(0), Token::TupleEnd],
+            &[Token::Seq { len: Some(0) }, Token::SeqEnd],
         );
     }
 
@@ -128,7 +108,7 @@ mod tests {
     fn test_ser_de_empty_serde_strings_no_index() {
         assert_tokens(
             &StringsNoIndex::new(),
-            &[Token::Tuple { len: 1 }, Token::U32(0), Token::TupleEnd],
+            &[Token::Seq { len: Some(0) }, Token::SeqEnd],
         );
     }
 
@@ -137,18 +117,15 @@ mod tests {
             let strings = $strings;
 
             // Test Strings
-            let mut tokens = vec![
-                Token::Tuple {
-                    len: 1 + strings.len() as usize,
-                },
-                Token::U32(strings.len().try_into().unwrap()),
-            ];
+            let mut tokens = vec![Token::Seq {
+                len: Some(strings.len() as usize),
+            }];
 
             for string in strings {
                 tokens.push(Token::BorrowedStr(string));
             }
 
-            tokens.push(Token::TupleEnd);
+            tokens.push(Token::SeqEnd);
 
             assert_tokens(strings, &tokens);
 
@@ -156,7 +133,7 @@ mod tests {
             tokens[0] = Token::Tuple {
                 len: strings.len() as usize,
             };
-            tokens.remove(1);
+            *tokens.last_mut().unwrap() = Token::TupleEnd;
 
             assert_ser_tokens(&strings.iter(), &tokens);
         };
