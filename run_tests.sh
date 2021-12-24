@@ -19,4 +19,4 @@ for _ in $rep; do
 done
 
 export MIRIFLAGS="-Zmiri-disable-isolation"
-exec cargo +nightly miri test $args
+exec cargo +nightly miri test small_array_box $args
