@@ -1,6 +1,12 @@
 use super::{Strings, StringsIter, StringsNoIndex, StringsNoIndexIter, TwoStrs};
 
-use core::fmt;
+use super::small_array_box::*;
+
+use std::fmt;
+use std::iter::Iterator;
+use std::marker::PhantomData;
+use std::ops::Deref;
+use std::ops::DerefMut;
 
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
 use serde::ser::{Serialize, SerializeTuple, Serializer};
@@ -84,6 +90,60 @@ impl<'de> Deserialize<'de> for TwoStrs {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let (s1, s2) = <(&'de str, &'de str)>::deserialize(deserializer)?;
         Ok(Self::new(s1, s2))
+    }
+}
+
+impl<T: Serialize, const INLINE_LEN: usize> Serialize for SmallArrayBox<T, INLINE_LEN> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.deref().serialize(serializer)
+    }
+}
+
+impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Deserialize<'de>
+    for SmallArrayBox<T, INLINE_LEN>
+{
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct SmallArrayBoxVisitor<T, const INLINE_LEN: usize>(PhantomData<T>);
+
+        impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Visitor<'de>
+            for SmallArrayBoxVisitor<T, INLINE_LEN>
+        {
+            type Value = SmallArrayBox<T, INLINE_LEN>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(formatter, "Expected slice")
+            }
+
+            fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                if let Some(len) = seq.size_hint() {
+                    if len <= INLINE_LEN {
+                        let mut this = SmallArrayBox::uninit_inline_storage();
+
+                        let inline_storage = unsafe { this.storage.inline_storage.deref_mut() };
+
+                        while let Some(value) = seq.next_element()? {
+                            inline_storage[this.len].write(value);
+                            this.len += 1;
+                        }
+
+                        return Ok(this);
+                    }
+                }
+
+                let mut values = Vec::new();
+
+                while let Some(value) = seq.next_element()? {
+                    values.push(value);
+                }
+
+                Ok(values.into())
+            }
+        }
+
+        deserializer.deserialize_seq(SmallArrayBoxVisitor(PhantomData))
     }
 }
 

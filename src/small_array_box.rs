@@ -8,17 +8,19 @@ use std::iter::{ExactSizeIterator, Iterator};
 use std::fmt::{self, Debug};
 use std::ops::{Deref, DerefMut};
 
+use std::cmp::{Eq, PartialEq};
+
 use array_init::array_init;
 
-union SmallArrayBoxInner<T, const INLINE_LEN: usize> {
+pub(crate) union SmallArrayBoxInner<T, const INLINE_LEN: usize> {
     ptr: NonNull<T>,
-    inline_storage: ManuallyDrop<[MaybeUninit<T>; INLINE_LEN]>,
+    pub(crate) inline_storage: ManuallyDrop<[MaybeUninit<T>; INLINE_LEN]>,
 }
 
 /// * `INLINE_LEN` - Number of elements that can be stored inline.
 pub struct SmallArrayBox<T, const INLINE_LEN: usize> {
-    storage: SmallArrayBoxInner<T, INLINE_LEN>,
-    len: usize,
+    pub(crate) storage: SmallArrayBoxInner<T, INLINE_LEN>,
+    pub(crate) len: usize,
 }
 
 impl<T, const INLINE_LEN: usize> Default for SmallArrayBox<T, INLINE_LEN> {
@@ -35,11 +37,21 @@ impl<T, const INLINE_LEN: usize> From<Box<[T]>> for SmallArrayBox<T, INLINE_LEN>
 
 impl<T, const INLINE_LEN: usize> From<Vec<T>> for SmallArrayBox<T, INLINE_LEN> {
     fn from(vec: Vec<T>) -> Self {
+        // TODO: Optimize this
         vec.into_boxed_slice().into()
     }
 }
 
 impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
+    pub(crate) fn uninit_inline_storage() -> Self {
+        Self {
+            storage: SmallArrayBoxInner {
+                inline_storage: ManuallyDrop::new(array_init(|_| MaybeUninit::uninit())),
+            },
+            len: 0,
+        }
+    }
+
     pub const fn new_empty() -> Self {
         Self {
             storage: SmallArrayBoxInner {
@@ -58,18 +70,15 @@ impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
         let len = iter.len();
 
         if len <= INLINE_LEN {
-            let mut this = Self {
-                storage: SmallArrayBoxInner {
-                    inline_storage: ManuallyDrop::new(array_init(|_| MaybeUninit::uninit())),
-                },
-                len,
-            };
+            let mut this = Self::uninit_inline_storage();
 
             let inline_storage = unsafe { this.storage.inline_storage.deref_mut() };
 
             iter.zip(inline_storage).for_each(|(src, dst)| {
                 dst.write(src);
             });
+
+            this.len = len;
 
             this
         } else {
@@ -186,6 +195,14 @@ impl<T: Debug, const INLINE_LEN: usize> Debug for SmallArrayBox<T, INLINE_LEN> {
         write!(f, "{:#?}", self.deref())
     }
 }
+
+impl<T: PartialEq, const INLINE_LEN: usize> PartialEq for SmallArrayBox<T, INLINE_LEN> {
+    fn eq(&self, other: &Self) -> bool {
+        self.deref().eq(other.deref())
+    }
+}
+
+impl<T: Eq, const INLINE_LEN: usize> Eq for SmallArrayBox<T, INLINE_LEN> {}
 
 #[cfg(test)]
 mod tests {
