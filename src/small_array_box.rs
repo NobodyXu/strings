@@ -23,6 +23,9 @@ pub struct SmallArrayBox<T, const INLINE_LEN: usize> {
     pub(crate) len: usize,
 }
 
+unsafe impl<T: Send, const INLINE_LEN: usize> Send for SmallArrayBox<T, INLINE_LEN> {}
+unsafe impl<T: Sync, const INLINE_LEN: usize> Sync for SmallArrayBox<T, INLINE_LEN> {}
+
 impl<T, const INLINE_LEN: usize> Default for SmallArrayBox<T, INLINE_LEN> {
     fn default() -> Self {
         Self::new_empty()
