@@ -149,11 +149,19 @@ impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Deserialize<'de>
 
 #[cfg(test)]
 mod tests {
+    const INLINE_LEN: usize = 8;
+
     use super::{Strings, StringsNoIndex, TwoStrs};
-    type SmallArrayBox = super::SmallArrayBox<u8, 8>;
+    type SmallArrayBox = super::SmallArrayBox<u8, INLINE_LEN>;
+
+    use std::error::Error;
+    use std::fmt::{self, Display};
+    use std::mem::MaybeUninit;
 
     use once_cell::sync::OnceCell;
     use serde_test::{assert_ser_tokens, assert_tokens, Token};
+
+    use serde::de::{self, value::SeqAccessDeserializer, Deserialize, DeserializeSeed, SeqAccess};
 
     // Test using serde_test
 
@@ -319,6 +327,54 @@ mod tests {
             assert_tokens(&array, &tokens);
 
             tokens.clear();
+        }
+    }
+
+    #[test]
+    fn test_small_array_box_de_error() {
+        #[derive(Debug)]
+        struct DummyError;
+
+        impl Display for DummyError {
+            fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                Ok(())
+            }
+        }
+
+        impl de::Error for DummyError {
+            fn custom<T: Display>(_msg: T) -> Self {
+                Self
+            }
+        }
+
+        impl Error for DummyError {}
+
+        struct ErrSeqAccess(usize);
+
+        impl<'de> SeqAccess<'de> for ErrSeqAccess {
+            type Error = DummyError;
+
+            fn next_element_seed<T>(&mut self, _seed: T) -> Result<Option<T::Value>, Self::Error>
+            where
+                T: DeserializeSeed<'de>,
+            {
+                if self.0 > 0 {
+                    self.0 -= 1;
+                    Ok(Some(unsafe { MaybeUninit::zeroed().assume_init() }))
+                } else {
+                    Err(DummyError)
+                }
+            }
+
+            fn size_hint(&self) -> Option<usize> {
+                Some(self.0)
+            }
+        }
+
+        for len in 0..INLINE_LEN {
+            let deserializer = SeqAccessDeserializer::new(ErrSeqAccess(len));
+
+            assert!(SmallArrayBox::deserialize(deserializer).is_err());
         }
     }
 }
