@@ -37,8 +37,11 @@ impl<T, const INLINE_LEN: usize> From<Box<[T]>> for SmallArrayBox<T, INLINE_LEN>
 
 impl<T, const INLINE_LEN: usize> From<Vec<T>> for SmallArrayBox<T, INLINE_LEN> {
     fn from(vec: Vec<T>) -> Self {
-        // TODO: Optimize this
-        vec.into_boxed_slice().into()
+        if vec.len() <= INLINE_LEN {
+            Self::new(vec)
+        } else {
+            vec.into_boxed_slice().into()
+        }
     }
 }
 
