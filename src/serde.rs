@@ -150,6 +150,7 @@ impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Deserialize<'de>
 #[cfg(test)]
 mod tests {
     use super::{Strings, StringsNoIndex, TwoStrs};
+    type SmallArrayBox = super::SmallArrayBox<u8, 8>;
 
     use once_cell::sync::OnceCell;
     use serde_test::{assert_ser_tokens, assert_tokens, Token};
@@ -282,5 +283,42 @@ mod tests {
         let two_strs = TwoStrs::new(s1, s2);
 
         assert_ser_de_json!(&two_strs, TwoStrs);
+    }
+
+    #[test]
+    fn test_ser_de_small_array_box_empty() {
+        let tokens = [Token::Seq { len: Some(0) }, Token::SeqEnd];
+
+        let array = SmallArrayBox::new([]);
+        assert_tokens(&array, &tokens);
+
+        let array = SmallArrayBox::new_empty();
+        assert_tokens(&array, &tokens);
+    }
+
+    #[test]
+    fn test_ser_de_small_array_box() {
+        let vec: Vec<u8> = (0..100).collect();
+
+        let mut tokens = Vec::new();
+
+        for len in 0..vec.len() {
+            let slice = &vec[..len];
+
+            let array = SmallArrayBox::new(slice.iter().copied());
+
+            tokens.reserve_exact(len + 2);
+
+            tokens.push(Token::Seq { len: Some(len) });
+
+            for i in 0..(len as u8) {
+                tokens.push(Token::U8(i));
+            }
+
+            tokens.push(Token::SeqEnd);
+            assert_tokens(&array, &tokens);
+
+            tokens.clear();
+        }
     }
 }
