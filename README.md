@@ -11,3 +11,9 @@
 More compact `Vec<Box<str>>` and `(Box<str>, Box<str>)`
 
 This crate contains feature `serde`, which enables serialization/deserialization support.
+
+## How to run tests
+
+```
+./run_test.sh
+```
