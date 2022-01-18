@@ -54,6 +54,12 @@ impl<T: Clone, const INLINE_LEN: usize> From<&[T]> for SmallArrayBox<T, INLINE_L
     }
 }
 
+impl<T: Clone, const INLINE_LEN: usize> Clone for SmallArrayBox<T, INLINE_LEN> {
+    fn clone(&self) -> Self {
+        Self::new(self.iter().cloned())
+    }
+}
+
 impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
     pub(crate) fn uninit_inline_storage() -> Self {
         Self {
