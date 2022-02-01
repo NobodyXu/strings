@@ -1,7 +1,7 @@
+use super::small_array_box::*;
 use super::{Strings, StringsIter, StringsNoIndex, StringsNoIndexIter, TwoStrs};
 
-use super::small_array_box::*;
-
+use std::convert::TryInto;
 use std::fmt;
 use std::iter::Iterator;
 use std::marker::PhantomData;

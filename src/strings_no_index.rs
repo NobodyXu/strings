@@ -1,5 +1,6 @@
-use core::iter::{ExactSizeIterator, IntoIterator, Iterator};
-use core::str;
+use std::convert::TryInto;
+use std::iter::{ExactSizeIterator, IntoIterator, Iterator};
+use std::str;
 
 use thin_vec::ThinVec;
 

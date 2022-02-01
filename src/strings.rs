@@ -1,8 +1,8 @@
-use core::convert::TryInto;
-use core::hint::unreachable_unchecked;
-use core::iter::{ExactSizeIterator, IntoIterator, Iterator};
-use core::slice;
-use core::str;
+use std::convert::TryInto;
+use std::hint::unreachable_unchecked;
+use std::iter::{ExactSizeIterator, IntoIterator, Iterator};
+use std::slice;
+use std::str;
 
 use thin_vec::ThinVec;
 
@@ -152,6 +152,7 @@ impl ExactSizeIterator for StringsIter<'_> {}
 #[cfg(test)]
 mod tests {
     use super::Strings;
+    use std::convert::TryInto;
 
     fn assert_strs_in(strs: &Strings, input_strs: &Vec<String>) {
         for (string, input_str) in strs.iter().zip(input_strs) {
