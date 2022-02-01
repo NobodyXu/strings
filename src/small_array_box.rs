@@ -93,7 +93,7 @@ impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
             let inline_storage = unsafe { this.storage.inline_storage.deref_mut() };
 
             iter.zip(inline_storage).for_each(|(src, dst)| {
-                dst.write(src);
+                *dst = MaybeUninit::new(src);
             });
 
             this.len = len;
