@@ -5,6 +5,7 @@ use std::convert::TryInto;
 use std::fmt;
 use std::iter::Iterator;
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ops::DerefMut;
 
@@ -125,7 +126,7 @@ impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Deserialize<'de>
                         let inline_storage = unsafe { this.storage.inline_storage.deref_mut() };
 
                         while let Some(value) = seq.next_element()? {
-                            inline_storage[this.len].write(value);
+                            inline_storage[this.len] = MaybeUninit::new(value);
                             this.len += 1;
                         }
 
