@@ -35,7 +35,7 @@ macro_rules! impl_ser_de_for_strings {
                     where
                         V: SeqAccess<'de>,
                     {
-                        let len = seq.size_hint().unwrap_or(0);
+                        let len = seq.size_hint().unwrap_or(10);
 
                         let mut values =
                             $Strings::with_capacity(len.try_into().map_err(|_| {
