@@ -119,7 +119,9 @@ impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Deserialize<'de>
             where
                 V: SeqAccess<'de>,
             {
-                if let Some(len) = seq.size_hint() {
+                let size_hint = seq.size_hint();
+
+                if let Some(len) = size_hint {
                     if len <= INLINE_LEN {
                         let mut this = SmallArrayBox::uninit_inline_storage();
 
@@ -134,7 +136,7 @@ impl<'de, T: Deserialize<'de>, const INLINE_LEN: usize> Deserialize<'de>
                     }
                 }
 
-                let mut values = Vec::new();
+                let mut values = Vec::with_capacity(size_hint.unwrap_or(10));
 
                 while let Some(value) = seq.next_element()? {
                     values.push(value);
