@@ -103,7 +103,7 @@ impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
             let vec: Vec<T> = iter.collect();
             let array_ptr = Box::into_raw(vec.into_boxed_slice());
             let slice = unsafe { &mut *array_ptr };
-            let ptr = unsafe { NonNull::new_unchecked(&mut slice[0]) };
+            let ptr = unsafe { NonNull::new_unchecked(slice.as_mut_ptr()) };
 
             Self {
                 storage: SmallArrayBoxInner { ptr },
@@ -121,7 +121,7 @@ impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
         } else {
             let array_ptr = Box::into_raw(boxed);
             let slice = unsafe { &mut *array_ptr };
-            let ptr = unsafe { NonNull::new_unchecked(&mut slice[0]) };
+            let ptr = unsafe { NonNull::new_unchecked(slice.as_mut_ptr()) };
 
             debug_assert_eq!(slice.len(), len);
 
