@@ -16,10 +16,27 @@ impl TwoStrs {
     /// * `s1` - must not contain null byte.
     /// * `s2` - must not contain null byte.
     pub fn new(s1: &str, s2: &str) -> Self {
-        let mut bytes = Vec::with_capacity(s1.len() + 1 + s2.len());
-        bytes.extend_from_slice(s1.as_bytes());
+        let iter1 = s1.as_bytes().iter().copied().filter(|byte| *byte != b'\0');
+        let iter2 = s2.as_bytes().iter().copied().filter(|byte| *byte != b'\0');
+
+        let len1 = iter1.clone().count();
+        let len2 = iter2.clone().count();
+
+        let mut bytes = Vec::with_capacity(len1 + 1 + len2);
+
+        if len1 == s1.len() {
+            bytes.extend_from_slice(s1.as_bytes());
+        } else {
+            bytes.extend(iter1);
+        }
+
         bytes.push(0);
-        bytes.extend_from_slice(s2.as_bytes());
+
+        if len2 == s2.len() {
+            bytes.extend_from_slice(s2.as_bytes());
+        } else {
+            bytes.extend(iter2);
+        }
 
         Self(bytes.into_boxed_slice())
     }
