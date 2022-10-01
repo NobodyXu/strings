@@ -10,8 +10,6 @@ use std::ops::{Deref, DerefMut};
 
 use std::cmp::{Eq, PartialEq};
 
-use array_init::array_init;
-
 pub(crate) union SmallArrayBoxInner<T, const INLINE_LEN: usize> {
     ptr: NonNull<T>,
     pub(crate) inline_storage: ManuallyDrop<[MaybeUninit<T>; INLINE_LEN]>,
