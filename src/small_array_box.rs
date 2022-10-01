@@ -1,4 +1,4 @@
-use std::mem::{transmute, ManuallyDrop, MaybeUninit};
+use std::mem::{ManuallyDrop, MaybeUninit};
 use std::ptr::NonNull;
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 
@@ -165,7 +165,7 @@ impl<T, const INLINE_LEN: usize> Deref for SmallArrayBox<T, INLINE_LEN> {
 
         if len <= INLINE_LEN {
             let inline_storage = unsafe { self.storage.inline_storage.deref() };
-            unsafe { transmute(&inline_storage[..len]) }
+            unsafe { &*(&inline_storage[..len] as *const _ as *const [T]) }
         } else {
             let ptr = unsafe { self.storage.ptr }.as_ptr();
             unsafe { from_raw_parts(ptr, len) }
@@ -179,7 +179,7 @@ impl<T, const INLINE_LEN: usize> DerefMut for SmallArrayBox<T, INLINE_LEN> {
 
         if len <= INLINE_LEN {
             let inline_storage = unsafe { self.storage.inline_storage.deref_mut() };
-            unsafe { transmute(&mut inline_storage[..len]) }
+            unsafe { &mut *(&mut inline_storage[..len] as *mut _ as *mut [T]) }
         } else {
             let ptr = unsafe { self.storage.ptr }.as_ptr();
             unsafe { from_raw_parts_mut(ptr, len) }
