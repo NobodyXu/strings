@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn test() {
         let mut strs = StringsNoIndex::new();
-        let input_strs: Vec<String> = (0..1024).map(|n| n.to_string()).collect();
+        let input_strs: Vec<String> = (0..256).map(|n| n.to_string()).collect();
 
         assert!(strs.is_empty());
 
