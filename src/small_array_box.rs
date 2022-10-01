@@ -64,7 +64,10 @@ impl<T, const INLINE_LEN: usize> SmallArrayBox<T, INLINE_LEN> {
     pub(crate) fn uninit_inline_storage() -> Self {
         Self {
             storage: SmallArrayBoxInner {
-                inline_storage: ManuallyDrop::new(array_init(|_| MaybeUninit::uninit())),
+                // Safety:
+                //
+                // It is safe because the array contains `MaybeUninit<T>`.
+                inline_storage: ManuallyDrop::new(unsafe { MaybeUninit::uninit().assume_init() }),
             },
             len: 0,
         }
