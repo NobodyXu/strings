@@ -75,5 +75,6 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ github.event.repository.name }}-${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-v2
+    - uses: taiki-e/install-action@nextest
     - name: Run tests
       run: ./run_tests.sh
