@@ -18,5 +18,5 @@ for _ in $rep; do
     cargo +nightly nextest run --all-features --nocapture
 done
 
-export MIRIFLAGS="-Zmiri-disable-isolation"
+#export MIRIFLAGS="-Zmiri-disable-isolation"
 exec cargo +nightly miri nextest run --all-features --nocapture
