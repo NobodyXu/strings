@@ -1,22 +1,22 @@
-#!/bin/bash -ex
+#!/bin/bash
 
-cd $(dirname `realpath $0`)
+set -euxo pipefail
+
+cd "$(dirname "$(realpath "$0")")"
 
 export RUST_TEST_THREADS=1
 
 rep=$(seq 1 10)
 
-args="--all-features -- --nocapture"
-
 for _ in $rep; do
-    cargo test $args
+    cargo nextest run --all-features --nocapture
 done
 
 export RUSTFLAGS='-Zsanitizer=address'
 export RUSTDOCFLAGS="$RUSTFLAGS"
 for _ in $rep; do
-    cargo +nightly test $args
+    cargo +nightly nextest run --all-features --nocapture
 done
 
 export MIRIFLAGS="-Zmiri-disable-isolation"
-exec cargo +nightly miri test small_array_box $args
+exec cargo +nightly miri nextest run --all-features --nocapture
