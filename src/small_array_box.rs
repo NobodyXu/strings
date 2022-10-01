@@ -277,7 +277,7 @@ mod tests {
         for len in 0..vec.len() {
             let slice = &vec[..len];
 
-            let vec: Vec<u8> = slice.iter().copied().collect();
+            let vec: Vec<u8> = slice.to_vec();
 
             let mut array = SmallArrayBox::from_box(vec.into_boxed_slice());
 
