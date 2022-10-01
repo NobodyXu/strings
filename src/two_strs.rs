@@ -77,6 +77,7 @@ mod tests {
         assert("acdbd3", "2333");
     }
 
+    #[allow(clippy::octal_escapes)]
     #[test]
     fn test_null() {
         let two_strs = TwoStrs::new("1\023d\0", "\023e\0");
