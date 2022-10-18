@@ -60,7 +60,8 @@ impl StringsNoIndex {
             self.set_len(len + 1);
         }
 
-        self.strs.extend_from_slice(s.as_bytes());
+        self.strs
+            .extend(s.as_bytes().iter().copied().filter(|byte| *byte != b'\0'));
         self.strs.push(0);
     }
 
